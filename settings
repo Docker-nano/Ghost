@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# Name of local Docker image.
+NANO_IMAGE=dockernano/ghost
+
+# Name of local Docker container.
+NANO_CONTAINER=Buildroot-Ghost
+
