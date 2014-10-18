@@ -22,7 +22,7 @@ To build the rootfs follow these steps.
 Creating a Docker image
 -----------------------
 
-1. `docker build -t nano/node.js product`
+1. `docker build -t nano/ghost product`
 
 Travis CI
 ---------
