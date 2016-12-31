@@ -1,33 +1,30 @@
+notifications:
+  email: false
+
 language: generic
 
-env:
-  global: ROOTFS="$HOME/buildroot/output/images/rootfs.tar.xz"
+sudo: required
 
-install:
-  - sudo ./.travis.bash
-  - sudo apt-get install -y pcregrep
+services:
+  - docker
+
+env: ROOTFS="$TRAVIS_BUILD_DIR/product/rootfs.tar.xz" PRODUCT=product
+
+before_script:
+  - |
+    keep-alive() {
+      while true; do
+        sleep 60
+        echo Building...
+      done &
+    }
 
 script:
-  - |
-    (cd ~/buildroot && sudo make defconfig BR2_DEFCONFIG=.config && sudo make 2>~/error.log) | tee ~/build.log |
-    # Filter log to avoid tripping Travis log limits (10K lines/4MB) or stalling due to timeout (10 minutes).
-    # We use pcregrep instead of grep -P because grep treats newlines in patterns as multiple patterns.
-    pcregrep -v '(?x)
-      ^(
-        # General spam.
-        Creating\ directory|Listing|Compiling|copying|changing\ mode|libtool|installing|patching
-
-        # Configure spam.
-        |[Cc]hecking|configure|config.status
-
-        # Make spam.
-        |[Mm]aking|\s*(cp|rm|mv|ln|mkdir|chmod|echo|touch|sed|-e|/usr/bin/install)|install-info
-      )\b
-      |^make\[.\]:
-
-      # Script fragments.
-      |^\s+[{}<>|]\s
-    '
+  - ./nano build image
+  - keep-alive &&
+    ./nano build rootfs 2>~/error.log > >(tee ~/build.log | grep '^\S*>>>\s')
+  - kill $! # keep-alive
+  - ./nano pull rootfs
 
   # Test rootfs readable.
   - '[[ -r $ROOTFS ]]'
@@ -36,10 +33,14 @@ script:
   - '[[ $(tar tf "$ROOTFS" | head -1) = ./ ]]'
 
   # Test rootfs contains node binary.
-  - tar tf "$ROOTFS" | grep -Fx ./usr/bin/node
+  - (( $(tar tf "$ROOTFS" | grep -Fxce ./usr/bin/node) == 1 ))
 
-  # Test rootfs contains sqlite3 module built from source.
-  - tar tf "$ROOTFS" | grep -Fx ./usr/lib/node_modules/ghost/node_modules/sqlite3/build/Release/node_sqlite3.node
+  # Import product image.
+  - docker build -t "$PRODUCT" product
+
+  # Test Node.
+  - docker run --rm "$PRODUCT" node -v
+  - '[[ $(docker run --rm "$PRODUCT" node -e ''console.log("foo")'') = foo ]]'
 
 after_failure:
   - tail -30 ~/error.log
@@ -71,7 +72,7 @@ after_success:
   - git pull --depth=1 origin "${branch=product/"$TRAVIS_BRANCH"}"
 
   # Copy rootfs and product skeleton.
-  - cp -fl "$ROOTFS" ../product/* .
+  - cp -fl ../product/* .
 
   # Push modified product files.
   - git add .;

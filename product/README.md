@@ -3,10 +3,10 @@ Nano Ghost
 
 [![Build status][Build image]][Build]
 
-This is the [Docker Nano](https://github.com/Docker-nano) image for [Ghost](https://ghost.org) v0.5.10.
+This is the [Docker Nano](https://github.com/Docker-nano) image for [Ghost](https://ghost.org) v0.11.3.
 
  * Docker Hub image: [`nano/ghost`][Docker Hub repo]
- * Size: ~64MB
+ * Size: ~166MB
 
 Usage
 -----
