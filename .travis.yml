@@ -3,11 +3,6 @@ notifications:
 
 language: generic
 
-sudo: required
-
-services:
-  - docker
-
 env: ROOTFS="$TRAVIS_BUILD_DIR/product/rootfs.tar.xz" PRODUCT=product
 
 before_script:
@@ -21,9 +16,9 @@ before_script:
 
 script:
   - ./nano build image
-  - keep-alive &&
-    ./nano build rootfs 2>~/error.log > >(tee ~/build.log | grep '^\S*>>>\s')
-  - kill $! # keep-alive
+  - keep-alive
+  - ./nano build rootfs 2>~/error.log | tee ~/build.log | grep '^\S*>>>\s'
+  - kill $! # Most recent background process (keep-alive).
   - ./nano pull rootfs
 
   # Test rootfs readable.
@@ -42,9 +37,24 @@ script:
   - docker run --rm "$PRODUCT" node -v
   - '[[ $(docker run --rm "$PRODUCT" node -e ''console.log("foo")'') = foo ]]'
 
+  # Generate new database.
+  - mkdir -vp ${data=$HOME/ghost/data}
+  - namei -mo "$data"
+  - docker run --rm "$PRODUCT" knex-migrator init
+  - '[[ -r $data/ghost.db ]]'
+
+  # Download Casper.
+  - git clone https://github.com/TryGhost/Casper.git "$data"/../themes/casper
+
+  # Run Ghost.
+  - docker run --rm -v "$data":/var/ghost -dp 127.0.0.1::2368 --name "$PRODUCT" "$PRODUCT"
+  - sleep 5
+  - wget 127.0.0.1:2368
+
 after_failure:
   - tail -30 ~/error.log
   - tail -30 ~/build.log
+  - docker logs "$PRODUCT"
 
 after_success:
   # Decrypt Git credentials file.

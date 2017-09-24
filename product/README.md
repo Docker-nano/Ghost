@@ -15,10 +15,11 @@ The site URL, IP and port can be customized when a container is run using a comm
 
  * `docker run -dp 127.0.0.1:2368:2368 -e NANO_URL=http://www.example.com --name Ghost nano/ghost:latest`
 
-If additional customization is required a configuration file can be mapped to `/etc/ghost/config.js` using volumes.
-Use [`product/config.js`](https://github.com/Docker-nano/Ghost/blob/master/product/config.js) as a starting template.
+If additional customization is required a configuration file can be mapped to `/etc/ghost/config.json` using volumes.
+Use [`product/config.production.json`](https://github.com/Docker-nano/Ghost/blob/master/product/config.production.json)
+as a starting template.
 
- * `docker run -dp 127.0.0.1:2368:2368 -v /my/config.js:/etc/ghost/config.js --name Ghost nano/ghost:latest`
+ * `docker run -dp 127.0.0.1:2368:2368 -v /my/config.json:/etc/ghost/config.json --name Ghost nano/ghost:latest`
 
 Ghost's content directory is mapped to `/var/ghost` and can be mirrored to the host using volumes.
 
