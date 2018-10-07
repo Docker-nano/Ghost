@@ -1,0 +1,72 @@
+variables:
+  rootfs: $(Build.SourcesDirectory)/product/rootfs.tar.xz
+  product: product
+
+steps:
+- script: ./nano build image
+  displayName: Build Buildroot container
+
+- script: ./nano build rootfs
+  displayName: Build Ghost
+
+- script: ./nano pull rootfs && [[ -r $ROOTFS ]]
+  displayName: Pull rootfs
+
+- script: '[[ $(tar tf "$ROOTFS" | head -1) = ./ ]]'
+  displayName: Test rootfs begins with root entry
+
+- script: (( $(tar tf "$ROOTFS" | grep -Fxce ./usr/bin/node) == 1 ))
+  displayName: Test rootfs contains node binary
+
+- script: docker build -t "$PRODUCT" product
+  displayName: Import product image
+
+- script: |
+    docker run --rm "$PRODUCT" node -v
+    [[ $(docker run --rm "$PRODUCT" node -e 'console.log("foo")') = foo ]]
+  displayName: Test Node
+
+- script: |
+    mkdir -vp ${data=$HOME/ghost/data}
+    namei -mo "$data"
+    echo "##vso[task.setvariable variable=data]$data"
+
+    docker run --rm -v "$data":/usr/lib/node_modules/ghost/content/data "$PRODUCT" knex-migrator init
+    [[ -r $data/ghost.db ]]
+  displayName: Generate new database
+
+- script: '[[ $(file "$DATA/ghost.db") = *''SQLite 3.x database'' ]]'
+  displayName: Verify database format
+
+- script: git clone https://github.com/TryGhost/Casper.git "$DATA"/../themes/casper
+  displayName: Download Casper
+
+- script: |
+    set -v
+    docker run --rm -v "$DATA"/..:/var/ghost -dp ${address=127.0.0.1:2368}:2368 --name "$PRODUCT" "$PRODUCT"
+    docker port "$PRODUCT"
+
+    sleep 5
+    docker logs "$PRODUCT"
+    wget $address
+    [[ $(file index.html) = *HTML\ document* ]]
+  displayName: Run Ghost
+
+- script: |
+    set -v
+
+    git init
+    git config user.name Azure
+    git config user.email bilge+azure-bot@scriptfusion.com
+    git config credential.helper store
+    git remote add origin $(Build.Repository.Uri)
+    echo '$(GIT_CREDENTIALS)' > ~/.git-credentials
+
+    git pull --depth=1 origin "${branch=product/$(Build.SourceBranchName)}"
+
+    cp -flv '$(Build.SourcesDirectory)'/product/* .
+
+    git add .
+    git commit -m 'Built product from $(Build.SourceVersion).' && git push origin HEAD:"$branch"
+  displayName: Push product
+  workingDirectory: $(Build.StagingDirectory)
