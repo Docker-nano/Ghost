@@ -3,10 +3,11 @@ Nano Ghost
 
 [![Build status][Build image]][Build]
 
-This is the [Docker Nano](https://github.com/Docker-nano) image for [Ghost](https://ghost.org) v0.11.3.
+This is the [Docker Nano](https://github.com/Docker-nano) image for [Ghost](https://ghost.org) v{{{ version }}}
+running on Node.js {{{ node version }}}.
 
  * Docker Hub image: [`nano/ghost`][Docker Hub repo]
- * Size: ~166MB
+ * Size: {{{ size }}}MB
 
 Usage
 -----
@@ -38,6 +39,6 @@ If you're running a firewall don't forget to permit `docker0` traffic. For examp
 
 To use a different mail configuration supply a custom configuration as described in [usage](#usage).
 
-  [Build]: http://travis-ci.org/Docker-nano/Ghost
-  [Build image]: http://img.shields.io/travis/Docker-nano/Ghost.svg "Build status"
-  [Docker Hub repo]: https://registry.hub.docker.com/u/nano/ghost/
+  [Build]: https://dev.azure.com/Docker-nano/Ghost/_build/latest?definitionId=2
+  [Build image]: https://dev.azure.com/Docker-nano/Ghost/_apis/build/status/Docker-nano.Ghost "Build status"
+  [Docker Hub repo]: https://registry.hub.docker.com/u/nano/ghost
