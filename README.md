@@ -4,10 +4,10 @@ Nano Ghost
 [![Build status][Build image]][Build]
 
 This is the [Docker Nano](https://github.com/Docker-nano) image for [Ghost](https://ghost.org) v1.8.6
-running on Node.js v6.14.4.
+running on Node.js v6.9.2.
 
  * Docker Hub image: [`nano/ghost`][Docker Hub repo]
- * Size: 169MB
+ * Size: 170MB
 
 Usage
 -----
