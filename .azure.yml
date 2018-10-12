@@ -33,13 +33,13 @@ steps:
 - script: |
     version=$(docker run --rm "$PRODUCT" node -v)
     echo Node.js version: $version
-    echo "##vso[task.setvariable variable=node version]$version"
+    [[ $version ]] && echo "##vso[task.setvariable variable=node version]$version"
   displayName: Export Node version
 
 - script: |
     version=$(tar xOf "$ROOTFS" ./usr/lib/node_modules/ghost/package.json | jq -r .version)
     echo Ghost version: $version
-    echo "##vso[task.setvariable variable=ghost version]$version"
+    [[ $version ]] && echo "##vso[task.setvariable variable=ghost version]$version"
   displayName: Export Ghost version
 
 - script: |
