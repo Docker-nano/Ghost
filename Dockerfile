@@ -1,4 +1,4 @@
-FROM dockernano/node.js:6.9-LTS
+FROM dockernano/node.js:6-LTS
 MAINTAINER Bilge <bilge@scriptfusion.com>
 
 COPY	in/buildroot.conf	/root/buildroot/.config
