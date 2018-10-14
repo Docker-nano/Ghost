@@ -60,13 +60,21 @@ steps:
 - script: |
     set -v
     docker run --rm -v "$DATA"/..:/var/ghost -dp ${address=127.0.0.1:2368}:2368 --name "$PRODUCT" "$PRODUCT"
+    echo "##vso[task.setvariable variable=address]$address"
     docker port "$PRODUCT"
 
     sleep 5
-    docker logs "$PRODUCT"
-    wget $address
-    [[ $(file index.html) = *HTML\ document* ]]
+    docker logs "$PRODUCT" | tee out
+
+    echo Blog URL: "${url=$(jq -r .url product/*.json)}"
+
+    (($(grep -e 'Ghost is running in production...' -e "Your blog is now available on $url" -c out) == 2))
   displayName: Run Ghost
+
+- script: |
+    wget $ADDRESS
+    [[ $(file index.html) = *HTML\ document* ]]
+  displayName: Download Ghost homepage
 
 - script: |
     wget -Otar https://github.com/cbroglie/mustache/releases/download/v1.0.1/mustache_1.0.1_linux_amd64.tar.gz
